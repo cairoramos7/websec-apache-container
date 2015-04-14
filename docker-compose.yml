@@ -1,0 +1,52 @@
+#############################################################
+# Docker Compose configuration for running a single 
+# Apache HTTPD service.
+#
+# In this case, we don't use Compose for the orchestration
+# of multiple docker services. We rather use it for the 
+# convenience to build and run our service with a simple 
+# command that still mounts some of our local directories 
+# into the service image. We thus can test our 
+# configurations by simply restarting the service; we don't
+# have to re-build the image every time.
+#
+# This Compose configuration is for use in the 
+# WebSec course lab. It is not intended for production use!
+#
+# Christoph Ludwig, 2015
+#
+
+# We define a single service named "httpd"
+httpd:
+    #
+    # Use the Dockerfile in the httpd-container subfolder to 
+    # create the Docker image.
+  build: ./httpd-container
+    #
+    # Assign the hostname "websec-httpd" to the service container.
+    # Docker will put this name into the container's /etc/hosts as a name
+    # for the docker network interface.
+    # Note: Docker does not change the configuration of your local 
+    # machine. You have to enter it into your local "hosts" file 
+    # if you want to use this name on the client side. 
+    # (Make it an alias for 127.0.0.1.)
+  hostname: "websec-httpd"
+    #
+    # Map the default http and https ports of the httpd container
+    # to the same ports of your host's loopback device.
+  ports:
+   - "127.0.0.1:80:80"
+   - "127.0.0.1:443:443"
+    #
+    # Make the httpd container mount the static HTTPD content,
+    # the server configuration, and the log directories from your 
+    # local file system.
+    # When the httpd docker image is built, the content of the two former 
+    # directories are copied into the Docker image anyway. But this way
+    # you only need to restart the service ("sudo docker-compose stop", 
+    # then "sudo docker-compose start") to test your changes; there is no
+    # need to rebuilt the docker image.
+  volumes:
+   - ./httpd-container/htdocs:/var/www
+   - ./httpd-container/conf:/usr/local/apache2/conf
+   - ./logs:/var/log/apache2
