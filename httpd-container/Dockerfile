@@ -9,13 +9,26 @@
 FROM httpd:2.4.12
 
 #
-# copy statically served files into the image
+# Install man2html and copy the man.sh script into the image
+#
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+                 man2html-base \
+                 manpages \
+                 manpages-dev \
+    && rm -r /var/lib/apt/lists/* 
+
+#
+# copy statically served files & CGI scripts into the image
 #
 ENV HTDOCS_PREFIX /var/www/
-RUN rm -rf "$HTDOCS_PREFIX" \
-    && mkdir -p "$HTDOCS_PREFIX" 
-COPY ./htdocs/ /var/www/
-RUN chown -R www-data:www-data "$HTDOCS_PREFIX"
+ENV CGI_PREFIX /usr/lib/cgi-bin/
+#
+RUN rm -rf "$HTDOCS_PREFIX" "$CGI_PREFIX" \
+    && mkdir -p "$HTDOCS_PREFIX" "$CGI_PREFIX"
+COPY ./htdocs/ "$HTDOCS_PREFIX"
+COPY ./cgi-bin/ "$CGI_PREFIX"
+RUN chown -R www-data:www-data "$HTDOCS_PREFIX" "$CGI_PREFIX"
 
 #
 # make sure /var/log/apache2/ exists and is empty
